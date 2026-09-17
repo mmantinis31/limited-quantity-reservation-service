@@ -1,0 +1,11 @@
+.git
+.idea
+.phpunit.cache
+coverage
+var
+vendor
+
+.env.local
+.env.*.local
+
+compose.override.yaml

@@ -1,0 +1,64 @@
+name: limited-quantity-reservation-service
+
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    init: true
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: "${APP_ENV:-dev}"
+      APP_DEBUG: "${APP_DEBUG:-1}"
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL must be configured in .env}"
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+      TZ: "${TZ:-UTC}"
+    volumes:
+      - ./:/var/www/html
+      - composer_cache:/tmp/composer-cache
+    depends_on:
+      database:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.30.5-alpine3.24
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      php:
+        condition: service_started
+
+  database:
+    image: "mysql:${MYSQL_VERSION:?MYSQL_VERSION must be configured in .env}"
+    command:
+      - "--character-set-server=${DATABASE_CHARSET:-utf8mb4}"
+      - "--collation-server=${DATABASE_COLLATION:-utf8mb4_0900_ai_ci}"
+    environment:
+      MYSQL_DATABASE: "${DATABASE_NAME:?DATABASE_NAME must be configured in .env}"
+      MYSQL_TEST_DATABASE: "${DATABASE_TEST_NAME:?DATABASE_TEST_NAME must be configured in .env}"
+      MYSQL_USER: "${DATABASE_USER:?DATABASE_USER must be configured in .env}"
+      MYSQL_PASSWORD: "${DATABASE_PASSWORD:?DATABASE_PASSWORD must be configured in .env}"
+      MYSQL_ROOT_PASSWORD: "${DATABASE_ROOT_PASSWORD:?DATABASE_ROOT_PASSWORD must be configured in .env}"
+      MYSQL_CHARACTER_SET: "${DATABASE_CHARSET:-utf8mb4}"
+      MYSQL_COLLATION: "${DATABASE_COLLATION:-utf8mb4_0900_ai_ci}"
+      TZ: "${TZ:-UTC}"
+    ports:
+      - "${DATABASE_EXPOSED_PORT:-33060}:3306"
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+
+volumes:
+  composer_cache:
+  database_data:
