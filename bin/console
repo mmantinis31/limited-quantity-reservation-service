@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+declare(strict_types=1);
+
 use App\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
@@ -14,8 +16,15 @@ if (!is_file(dirname(__DIR__).'/vendor/autoload_runtime.php')) {
 
 require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
 
-return function (array $context) {
-    $kernel = new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
+return static function (array $context): Application {
+    $environment = $context['APP_ENV'] ?? null;
+
+    if (!is_string($environment)) {
+        throw new RuntimeException('The APP_ENV environment variable must be a string.');
+    }
+
+    $debug = filter_var($context['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOL);
+    $kernel = new Kernel($environment, $debug);
 
     return new Application($kernel);
 };

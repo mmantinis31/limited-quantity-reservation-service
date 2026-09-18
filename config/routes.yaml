@@ -9,3 +9,11 @@
 
 controllers:
     resource: routing.controllers
+
+app.home:
+    path: /
+    methods: GET
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
+    defaults:
+        route: app.swagger_ui
+        permanent: false
