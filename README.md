@@ -16,9 +16,6 @@ The implementation deliberately stays small: transport adapters call shared appl
 - [Concurrency and consistency](#concurrency-and-consistency)
 - [Tests and quality checks](#tests-and-quality-checks)
 - [Database and fixtures](#database-and-fixtures)
-- [Configuration](#configuration)
-- [Operational notes](#operational-notes)
-- [Troubleshooting](#troubleshooting)
 
 ## Business rules
 
@@ -422,42 +419,3 @@ On a clean database, fixtures create:
 Fixture loading purges existing application data. The IDs above are only guaranteed on a freshly initialized database.
 
 The host MySQL connection uses `localhost:33060` by default. Containers connect internally through `database:3306`.
-
-## Configuration
-
-Committed `.env` values are safe local-development defaults. Production secrets and credentials must be provided through the deployment environment and must not be committed.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `HTTP_PORT` | `8080` | Host port exposed by Nginx |
-| `DATABASE_EXPOSED_PORT` | `33060` | MySQL port exposed to the host |
-| `MYSQL_VERSION` | `8.4.11` | MySQL Docker image version |
-| `DATABASE_HOST` | `database` | Internal Compose service hostname |
-| `DATABASE_PORT` | `3306` | Internal MySQL port |
-| `DATABASE_NAME` | `reservation` | Development database |
-| `DATABASE_TEST_NAME` | `reservation_test` | Test database created by Docker initialization |
-| `DATABASE_USER` | `reservation` | Local database user |
-| `DATABASE_PASSWORD` | `reservation` | Local database password |
-| `DATABASE_ROOT_PASSWORD` | `root` | Local MySQL root password |
-| `TZ` | `UTC` | Container timezone |
-
-When connecting from a host database client, use:
-
-```text
-Host:     127.0.0.1
-Port:     33060
-Database: reservation
-User:     reservation
-Password: reservation
-```
-
-## Operational notes
-
-- Product CRUD and user authentication are intentionally outside the assignment scope.
-- `userId` is an opaque external identifier with a maximum length of 128 characters.
-- Payment processing and webhook validation are not implemented; the confirmation endpoint represents a successful external payment decision.
-- Expiration is command-driven and requires an external scheduler in a deployed environment.
-- Reservation creation does not accept an idempotency key. A client retry may therefore create another valid reservation if stock remains available; adding a persisted idempotency key would be the next step if retry semantics became a requirement.
-- The persistence implementation intentionally targets MySQL. The migration fails fast on unsupported database platforms because concurrency behaviour is database-specific.
-- For larger production workloads, useful next steps would include bounded retries for transient deadlocks, metrics for lock waits and expiration lag, structured tracing, and an outbox only when reliable downstream events have a real consumer.
-
