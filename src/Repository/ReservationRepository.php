@@ -57,7 +57,7 @@ final class ReservationRepository extends ServiceEntityRepository
         $this->assertTransactionActive();
 
         $connection = $this->getEntityManager()->getConnection();
-        $expiresAt = self::toUtc($now);
+        $expiresAt = self::normalizeToUtcSecondPrecision($now);
 
         /** @var list<int|string> $rawIds */
         $rawIds = $connection->createQueryBuilder()
@@ -112,7 +112,7 @@ final class ReservationRepository extends ServiceEntityRepository
         }
     }
 
-    private static function toUtc(\DateTimeImmutable $dateTime): \DateTimeImmutable
+    private static function normalizeToUtcSecondPrecision(\DateTimeImmutable $dateTime): \DateTimeImmutable
     {
         $dateTime = $dateTime->setTimezone(new \DateTimeZone('UTC'));
 

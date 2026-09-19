@@ -81,7 +81,7 @@ class Reservation
             throw new InvalidReservationUserId(self::USER_ID_MAX_LENGTH);
         }
 
-        return new self($product, $userId, $quantity, self::toUtc($createdAt));
+        return new self($product, $userId, $quantity, self::normalizeToUtcSecondPrecision($createdAt));
     }
 
     public function id(): ?int
@@ -139,7 +139,7 @@ class Reservation
             throw ReservationCannotBeConfirmed::fromStatus($this->status);
         }
 
-        $now = self::toUtc($now);
+        $now = self::normalizeToUtcSecondPrecision($now);
 
         if ($now >= $this->expiresAt) {
             throw ReservationCannotBeConfirmed::becauseExpired($this->expiresAt);
@@ -161,7 +161,7 @@ class Reservation
             throw ReservationCannotBeExpired::fromStatus($this->status);
         }
 
-        $now = self::toUtc($now);
+        $now = self::normalizeToUtcSecondPrecision($now);
 
         if ($now < $this->expiresAt) {
             throw ReservationCannotBeExpired::beforeDeadline($this->expiresAt);
@@ -180,10 +180,10 @@ class Reservation
         }
 
         return ReservationStatus::PENDING === $this->status
-            && self::toUtc($now) >= $this->expiresAt;
+            && self::normalizeToUtcSecondPrecision($now) >= $this->expiresAt;
     }
 
-    private static function toUtc(\DateTimeImmutable $dateTime): \DateTimeImmutable
+    private static function normalizeToUtcSecondPrecision(\DateTimeImmutable $dateTime): \DateTimeImmutable
     {
         $dateTime = $dateTime->setTimezone(new \DateTimeZone('UTC'));
 
