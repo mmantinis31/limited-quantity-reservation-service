@@ -261,12 +261,6 @@ docker compose exec php php bin/console app:reservation:expire --batch-size=250
 
 The command reports the number of expired reservations, released units, and processed batches. It is safe to run repeatedly and supports multiple concurrent workers through `FOR UPDATE SKIP LOCKED`.
 
-Scheduling is intentionally outside the application scope. A deployment may invoke the command every minute through cron or its platform scheduler. For example, when Docker Compose is the runtime:
-
-```cron
-* * * * * cd /path/to/limited-quantity-reservation-service && docker compose exec -T php php bin/console app:reservation:expire --batch-size=100
-```
-
 ## Architecture
 
 The project uses a lightweight layered design:
